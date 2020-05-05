@@ -61,9 +61,20 @@ def qb(request):
     return render(request,"health_dash/test.html",context)
 
 
+
+
 def interface(request):
     myform = QueryForm()
+    if request.is_ajax():
+        selected_field = request.GET['field']
+        max = Corporatorward.objects.raw('select 1 as id,max({}) from corporatorward'.format(selected_field))[0].max
+        min = Corporatorward.objects.raw('select 1 as id,min({}) from corporatorward'.format(selected_field))[0].min
+        jsondata = {
+            'min': min,'max':max
+        }
+        return JsonResponse(jsondata)
     if request.method == 'POST':
+        
         myform =  QueryForm(request.POST)
         if myform.is_valid():
             query_column = myform.cleaned_data['field']
@@ -72,8 +83,8 @@ def interface(request):
             query="""select * from corporatorward where {} {} {}""".format(query_column,operator,value)
             raw = Corporatorward.objects.raw(query)
             context = {'form':myform,'data':raw}
+            
             return render(request,'health_dash/interface.html',context)
-
         else:
             print(myform.errors)
 
